@@ -7,7 +7,10 @@
 #include <termios.h>
 #include <time.h>
 #include <numeric>
-#include <math.h>
+#include <math.h>	
+
+#define clear() printf("\033[H\033[J")
+#define gotoxy(x,y) printf("\033[%d;%dH", (y), (x))
 
 using namespace std;
 
@@ -56,21 +59,36 @@ void flushBuffer(char* screenBuffer) {
 			screenBuffer[screenBufferIndex] = ' ';
 			screenBufferIndex++;
 		}
-
-		// add new line characters for every row except for the last one
-		if (i < (SCREEN_HEIGHT - 1)) {
-			screenBuffer[screenBufferIndex] = '\n';
-			screenBufferIndex++;
-		}
 	}
-	system("clear");
-	sleep(0.01);
+	clear();
+	gotoxy(0, 0);
 }
 
-void drawScreen(char* screenBuffer) {
-	for (int i = 0; i < SCREEN_BUFFER_LEN; i++) {
-		printf("%c", screenBuffer[i]);
+void drawScreen(char* screenBuffer, char* nextScreenBuffer) {
+	// for (int i = 0; i < SCREEN_BUFFER_LEN; i++) {
+	// 	printf("%c", screenBuffer[i]);
+	// }
+
+	clear();
+	gotoxy(0, 0);
+
+	for (int y = 0; y < SCREEN_HEIGHT; y++) {
+		for (int x = 0; x < SCREEN_WIDTH; x++) {
+			if (screenBuffer[y * SCREEN_WIDTH + x + y] == nextScreenBuffer[y * SCREEN_WIDTH + x + y]) {
+				continue;
+			}
+			gotoxy(x, y);
+			printf("%c", nextScreenBuffer[y * SCREEN_WIDTH + x + y]);
+		}
+
+		// add new line characters for every row except for the last one
+		if (y < (SCREEN_HEIGHT - 1)) {
+			printf("%c", '\n');
+		}
 	}
+	sleep(1);
+
+	
 }
 
 int main(int argc, char* argv[])
@@ -85,8 +103,8 @@ int main(int argc, char* argv[])
 	// buffer for ascii image (basically just a big ol' array of characters to write to the screen.
 	// (it may be better to use a 2d array or something for just one image, but I chose to do it this way
 	// because it fits better with the project I'm using this for
-	char screenBuffer[SCREEN_WIDTH * SCREEN_HEIGHT + SCREEN_HEIGHT - 1]; 
-	char nextScreenBuffer[SCREEN_WIDTH * SCREEN_HEIGHT + SCREEN_HEIGHT - 1];
+	char screenBuffer[SCREEN_WIDTH * SCREEN_HEIGHT]; 
+	char nextScreenBuffer[SCREEN_WIDTH * SCREEN_HEIGHT];
 	SCREEN_BUFFER_LEN = (int)(sizeof(screenBuffer)/sizeof(screenBuffer[0]));
 
 	//disable terminal cursor 
@@ -105,7 +123,6 @@ int main(int argc, char* argv[])
 
 	//drawScreen(screenBuffer);
 	flushBuffer(screenBuffer);
-	flushBuffer(nextScreenBuffer);
 
  	while (true)
  	{
@@ -119,9 +136,13 @@ int main(int argc, char* argv[])
 		// 	}			
 		// }
 		
-		line(nextScreenBuffer, 0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, 255);
-		drawScreen(screenBuffer);
-		sleep(0.5);
+		line(nextScreenBuffer, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 255);
+		drawScreen(screenBuffer, nextScreenBuffer);
+		flushBuffer(nextScreenBuffer);
+
+		
+		//flushBuffer(screenBuffer);
+
 		// convert the brightness values to corresponding character for each pixel, and add to the screenBuffer
 		// int screenBufferIndex = 0;
 		// for (int i = 0; i < frame.rows; i++) {
