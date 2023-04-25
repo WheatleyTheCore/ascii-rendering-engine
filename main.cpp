@@ -1,95 +1,21 @@
-#include <iostream>
 #include <stdio.h>
 #include <sys/ioctl.h>
-#include<unistd.h>
 #include <stdlib.h>
-#include <string.h>
-#include <termios.h>
-#include <time.h>
-#include <numeric>
-#include <math.h>	
+#include <gsl/gsl_blas.h>
+#include <unistd.h>
 
-#define clear() printf("\033[H\033[J")
-#define gotoxy(x,y) printf("\033[%d;%dH", (y), (x))
+#include <math.h>
+#include "render.hpp"
+#include "matrixMath.h"
+
+#define PI 3.14159265358979
 
 using namespace std;
 
 int SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BUFFER_LEN = 0;
 
-// from lightest to darkest (if dark background and light text)
-char brightnessChars[] = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`'.                         ";
-
-// map function for mapping number from one range to another
-long mapValue(long x, long in_min, long in_max, long out_min, long out_max)
-{
-  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-}
-
-// draw a "pixel" on the screen (top left is 0, 0)
-void pixel(char* screenBuffer, int x, int y, int brightness) {
-	int brightnessCharIndex = mapValue(brightness, 0, 255, sizeof(brightnessChars)/sizeof(brightnessChars[0]), 0);
-	//printf("BrightnessIndex: %d\n", brightnessCharIndex);
-	char pixelChar = brightnessChars[brightnessCharIndex]; //the character to draw to the screen
-
-	long pixelIndex = SCREEN_WIDTH * y + y + x; //total lines above plus new lines plux the x value
-	//printf("Pixel index: %ld", pixelIndex);
-	screenBuffer[pixelIndex] = pixelChar;
-
-}
-
-void line(char* screenBuffer, int x1, int y1, int x2, int y2, int brightness) {
-	int dx = x2 - x1;
-	int dy = y2 - y1;
-
-	int length = (int)sqrt(dx * dx + dy * dy);
-	float angle = atan2(dy, dx);
-	// printf("width: %d, height: %d, length %d, angle %f, dx %d, dy %d", SCREEN_WIDTH, SCREEN_HEIGHT, length, angle, dx, dy);
 
 
-	for (int i = 0; i < length; i++) {
-		pixel(screenBuffer, x1 + (int)(cos(angle) * i), y1 + (int)(sin(angle) * i), brightness);
-	}
-}
-
-// empty screen buffer (make it all ' ')
-void flushBuffer(char* screenBuffer) {      
-	int screenBufferIndex = 0;
-	for (int i = 0; i < SCREEN_HEIGHT; i++) {
-		for (int j = 0; j < SCREEN_WIDTH; j++) {
-			screenBuffer[screenBufferIndex] = ' ';
-			screenBufferIndex++;
-		}
-	}
-	clear();
-	gotoxy(0, 0);
-}
-
-void drawScreen(char* screenBuffer, char* nextScreenBuffer) {
-	// for (int i = 0; i < SCREEN_BUFFER_LEN; i++) {
-	// 	printf("%c", screenBuffer[i]);
-	// }
-
-	clear();
-	gotoxy(0, 0);
-
-	for (int y = 0; y < SCREEN_HEIGHT; y++) {
-		for (int x = 0; x < SCREEN_WIDTH; x++) {
-			if (screenBuffer[y * SCREEN_WIDTH + x + y] == nextScreenBuffer[y * SCREEN_WIDTH + x + y]) {
-				continue;
-			}
-			gotoxy(x, y);
-			printf("%c", nextScreenBuffer[y * SCREEN_WIDTH + x + y]);
-		}
-
-		// add new line characters for every row except for the last one
-		if (y < (SCREEN_HEIGHT - 1)) {
-			printf("%c", '\n');
-		}
-	}
-	sleep(1);
-
-	
-}
 
 int main(int argc, char* argv[])
 {
@@ -109,59 +35,138 @@ int main(int argc, char* argv[])
 
 	//disable terminal cursor 
 	// TODO needs to be fixed
-	printf("\e[?25l");
+	//printf("\e[?25l");
+
+	double square[] = { 50, 50, 0,
+					 50, 100, 0,
+					 100, 100, 0,
+					 100, 50, 0};
+
+	//struct vec3 square[4];
+
+	// square[0].x = 0; 
+	// square[0].y = 0;
+	// square[0].z = 0;
+
+	// square[1].x = 0; 
+	// square[1].y = 50;
+	// square[0].z = 0;
+
+	// square[2].x = 50; 
+	// square[2].y = 50;
+	// square[0].z = 0;
+
+	// square[3].x = 50; 
+	// square[3].y = 0;
+	// square[0].z = 0;
+
+	double angle = 0;
+	// double **transformedPoint;
+	// double **point, **rotationMatrix;
+
+	// point = (double **) malloc(2 * sizeof(double *));
+	// transformedPoint = (double **) malloc(2 * sizeof(double *));
+	// rotationMatrix = (double **) malloc(2 * sizeof(double *));
+
+	// for (int i = 0; i < 2; i++) {
+    //     point[i] = (double *) malloc(2 * sizeof(double));
+    //     rotationMatrix[i] = (double *) malloc(1 * sizeof(double));
+    //     transformedPoint[i] = (double *) malloc(1 * sizeof(double));
+
+    // }
 
 
+	// getRotationMatrix(angle, rotationMatrix);
 
-	// print out dimensions of screen
-    // printf ("width %d\n", SCREEN_WIDTH);
-	// printf ("height %d\n", SCREEN_HEIGHT);
-	// printf("screen buffer length: %d\n", SCREEN_BUFFER_LEN);
+	// point[0][1] = 0;
+	// point[0][0] = 50;
 
+	// matrixMultiply(point, rotationMatrix, transformedPoint, 2, 2, 1);
+	// printf("Product of the matrices:\n");
+    // for (int i = 0; i < 2; i++) {
+    //     for (int j = 0; j < 2; j++) {
+    //         printf("%f ", transformedPoint[i][j]);
+    //     }
+    //     printf("\n");
+    // }
 
-	//sleep(1);
+	// for (int i = 0;i < 4; i++) {
+		
+	// 	point[0][0] = square[i].x;
+	// 	point[1][0] = square[i].y;
+	// 	matrixMultiply(point, rotationMatrix, transformedPoint, 2, 2, 1);
+	// 	square[i].x = (int)transformedPoint[0][0];
+	// 	square[i].y = (int)transformedPoint[0][0];
+	// 	angle += 0.1;
+    // }
+	
 
-	//drawScreen(screenBuffer);
 	flushBuffer(screenBuffer);
+
+	double rotationMatrixX[] = {cos(angle), 0, sin(angle),
+								0, 1, 0,
+								-sin(angle), 0, cos(angle)};
+
+	double productMatrix[] = {0, 0, 0, 
+							  0, 0, 0, 
+							  0, 0, 0};
+
+	gsl_matrix_view A = gsl_matrix_view_array(square, 4, 3);
+	gsl_matrix_view B = gsl_matrix_view_array(rotationMatrixX, 3, 3);
+	gsl_matrix_view C = gsl_matrix_view_array(productMatrix, 4, 3);
+
+
+	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,
+				1.0, &A.matrix, &B.matrix,
+				0.0, &C.matrix);
+
+	
 
  	while (true)
  	{
 		
-		// for (int h = 0; h < SCREEN_HEIGHT; h++){
-		// 	for (int i = 0; i < SCREEN_WIDTH; i++) {
-		// 		flushBuffer(screenBuffer);
-		// 		pixel(screenBuffer, i, h, 255);
-		// 		drawScreen(screenBuffer);
-		// 		sleep(0.05);
-		// 	}			
+		// for (int i = 0;i < 4; i++) {
+			
+		// 	point[0][0] = square[i].x;
+		// 	point[1][0] = square[i].y;
+		// 	matrixMultiply(point, rotationMatrix, transformedPoint, 2, 2, 1);
+		// 	square[i].x = (int)transformedPoint[0][0];
+		// 	square[i].y = (int)transformedPoint[1][0];
+		// 	//printf("%d %d | ", square[i].x, square[i].y);
+
+		// 	angle += 0.1;
 		// }
-		
-		line(nextScreenBuffer, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 255);
+		angle += 0.1;
+		double square[] = { -15, -15, 0,
+					 -15, 15, 0,
+					 15, 15, 0,
+					 15, -15, 0};
+		double rotationMatrixY[] = {cos(angle), -sin(angle), 0,
+								    sin(angle), cos(angle), 0,
+								    0, 0, 1};
+		double productMatrix[] = {0, 0, 0, 
+							  0, 0, 0, 
+							  0, 0, 0};
+
+		gsl_matrix_view A = gsl_matrix_view_array(square, 4, 3);
+		gsl_matrix_view C = gsl_matrix_view_array(productMatrix, 4, 3);
+		gsl_matrix_view B = gsl_matrix_view_array(rotationMatrixY, 3, 3);
+
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,
+					1.0, &A.matrix, &B.matrix,
+					0.0, &C.matrix);
+
+		for (int i = 0; i < 12; i+=3) {
+			//printf("%d, %d, %d\n", (int)productMatrix[i], (int)productMatrix[i+1], (int)productMatrix[i+3]);
+			pixel(nextScreenBuffer, (int)productMatrix[i] + 40, (int)productMatrix[i+1] + 30, 255);
+		}
+			//		sleep(1);
+
+
 		drawScreen(screenBuffer, nextScreenBuffer);
 		flushBuffer(nextScreenBuffer);
+		
 
-		
-		//flushBuffer(screenBuffer);
-
-		// convert the brightness values to corresponding character for each pixel, and add to the screenBuffer
-		// int screenBufferIndex = 0;
-		// for (int i = 0; i < frame.rows; i++) {
-		// 	for (int j = 0; j < frame.cols; j++) {
-		// 		int pixelValue = (int)frame.at<uchar>(i,j);
-		// 		int brightnessCharIndex = mapValue(pixelValue, 0, 255, (int)(sizeof(brightnessChars)/sizeof(brightnessChars[0])), 0);
-		// 		screenBuffer[screenBufferIndex] = brightnessChars[brightnessCharIndex];
-		// 		screenBufferIndex++;
-		// 	}
-	
-		// 	// add new line characters for every row except for the last one
-		// 	if (i < (frame.rows - 1)) {
-		// 		screenBuffer[screenBufferIndex] = '\n';
-		// 		screenBufferIndex++;
-		// 	}
-		// }	
-		
-		// clear screen, then render screenBuffer
-		
 		
  	}
 

@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "gsl_sf_bessel.h": "c",
+        "random": "cpp"
+    }
+}
